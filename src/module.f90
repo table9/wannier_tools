@@ -365,6 +365,7 @@
      character(80) :: Particle           ! phonon, electron
      character(80) :: Package            ! VASP, QE
      character(80) :: KPorTB             ! KP or TB
+     character(256) :: Lindhard_output   ! Output filename for Lindhard susceptibility
      logical       :: Orthogonal_Basis   ! True or False for Orthogonal basis or non-orthogonal basis
      logical :: Is_Sparse_Hr, Is_Sparse, Is_Hrfile
      namelist / TB_FILE / Hrfile, Particle, Package, KPorTB, Is_Hrfile, &
@@ -393,6 +394,7 @@
      logical :: WireBand_calc  ! Flag for 1D wire energy band calculation
      logical :: SlabSS_calc    ! Flag for surface state ARPES spectrum calculation
      logical :: Dos_calc       ! Flag for density of state calculation
+     logical :: Lindhard_calc  ! Flag for Lindhard susceptibility calculation
      logical :: Dos_slab_calc       ! Flag for density of state calculation for slab system
      logical :: ChargeDensity_selected_bands_calc       ! Flag for charge density 
      logical :: ChargeDensity_selected_energies_calc       ! Flag for charge density 
@@ -494,7 +496,7 @@
                           LandauLevel_B_calc, LandauLevel_kplane_calc,landau_chern_calc, &
                           FermiLevel_calc,ANE_calc, export_newhr,export_maghr,w3d_nested_calc, &
                           valley_projection_calc, Matrix_Element_calc, BdGChern_calc, SlabBdG_calc, BdG_phase_calc, &
-                          linear_optic_calc, BPVE_calc, Intra_orbital_hall_calc
+                          linear_optic_calc, BPVE_calc, Intra_orbital_hall_calc, Lindhard_calc
 
      integer :: Nslab  ! Number of slabs for 2d Slab system
      integer :: Nslab1 ! Number of slabs for 1D wire system
@@ -523,6 +525,12 @@
      integer :: Nk1  ! number of k points for different use
      integer :: Nk2  ! number of k points for different use
      integer :: Nk3  ! number of k points for different use
+     integer :: Lindhard_Nk1  ! number of k points for Lindhard calculation
+     integer :: Lindhard_Nk2  ! number of k points for Lindhard calculation
+     integer :: Lindhard_Nk3  ! number of k points for Lindhard calculation
+     integer :: Lindhard_Nq1  ! number of q points for Lindhard calculation
+     integer :: Lindhard_Nq2  ! number of q points for Lindhard calculation
+     integer :: Lindhard_Nq3  ! number of q points for Lindhard calculation
      integer, parameter :: Nk2_max= 4096   ! maximum number of k points 
 
      integer, public, save :: Nr1=5
@@ -544,6 +552,7 @@
 
    
      integer :: OmegaNum   ! The number of energy slices between OmegaMin and OmegaMax
+     integer :: Lindhard_omega_num   ! Frequency slices for Lindhard susceptibility
      integer :: OmegaNum_unfold   ! The number of energy slices between OmegaMin and OmegaMax
      real(dp), allocatable :: Omega_array(:)
 
@@ -552,7 +561,9 @@
 
      integer :: NumRandomConfs  !> number of random configurations, used in the Lanczos DOS calculation, default is 1
 
-     real(dp) :: OmegaMin, OmegaMax ! omega interval 
+     real(dp) :: OmegaMin, OmegaMax ! omega interval
+     real(dp) :: Lindhard_omega_min, Lindhard_omega_max
+     real(dp) :: Lindhard_broadening
   
      real(Dp) :: E_arc ! Fermi energy for arc calculation
      real(Dp) :: iso_energy ! an iso energy for some properties at a fixed energy. replace iso_energy with iso_energy from version 2.7.2
@@ -631,10 +642,12 @@
 
      !> namelist parameters
      namelist /PARAMETERS/ E_arc, Fermi_broadening, EF_integral_range, OmegaNum, OmegaNum_unfold, OmegaMin, OmegaMax, &
-        Eta_Arc, iso_energy, Nk1, Nk2, Nk3, NP, Gap_threshold, Tmin, Tmax, NumT, &
+        Lindhard_omega_num, Lindhard_omega_min, Lindhard_omega_max, Lindhard_broadening, &
+        Eta_Arc, iso_energy, Nk1, Nk2, Nk3, Lindhard_Nk1, Lindhard_Nk2, Lindhard_Nk3, &
+        Lindhard_Nq1, Lindhard_Nq2, Lindhard_Nq3, Lindhard_q_start, Lindhard_output, NP, Gap_threshold, Tmin, Tmax, NumT, &
         NBTau, BTauNum, BTauMax, Rcut, Magp, Magq, Magp_min, Magp_max, Nslice_BTau_Max, &
-        wcc_neighbour_tol, wcc_calc_tol, Beta,NumLCZVecs, iprint_level, &
-        Relaxation_Time_Tau,  symprec, arpack_solver, RKF45_PERIODIC_LEVEL, &
+        wcc_neighbour_tol, wcc_calc_tol, Beta, NumLCZVecs, iprint_level, &
+        Relaxation_Time_Tau, symprec, arpack_solver, RKF45_PERIODIC_LEVEL, &
         NumRandomConfs, NumSelectedEigenVals, projection_weight_mode, topsurface_atom_index, &
         photon_energy_arpes, polarization_xi_arpes, test_namelist, nnzmax_input, &
         polarization_alpha_arpes, polarization_delta_arpes, penetration_lambda_arpes, polarization_phi_arpes, &
@@ -927,6 +940,7 @@
      real(dp) :: K3D_vec1_cube(3) ! the 1st k vector for the k cube
      real(dp) :: K3D_vec2_cube(3) ! the 2nd k vector for the k cube
      real(dp) :: K3D_vec3_cube(3) ! the 3rd k vector for the k cube
+     real(dp) :: Lindhard_q_start(3) ! starting q-vector for Lindhard calculation
 
      integer, allocatable     :: irvec(:,:)   ! R coordinates in fractional units
      integer, allocatable     :: irvec_valley(:,:)   ! R coordinates in fractional units
