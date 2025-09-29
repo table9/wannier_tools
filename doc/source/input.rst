@@ -341,6 +341,9 @@ We listed those features in the table below.
 | JDos_calc            | Joint Density of state   |  jdos.dat                       |      yes        |
 |                      | for 3D bulk system       |                                 |                 |
 +----------------------+--------------------------+---------------------------------+-----------------+
+| Lindhard_calc        | Lindhard susceptibility  |  lindhard.dat                   |      no         |
+|                      | chi(q, omega) grids      |                                 |                 |
++----------------------+--------------------------+---------------------------------+-----------------+
 | SlabSS_calc          | Surface spectrum A(k,E)  | dos.dat_l, dos.dat_r,           |      yes        |
 |                      | along a kline and energy | dos.dat_bulk,surfdos_l.gnu,     |                 |
 |                      | interval for slab system | surfdos_r.gnu,                  |                 |
@@ -433,9 +436,23 @@ In this namelists, we listed some parameters necessary in the task you specified
 
 **OmegaNum** : integer valued, Number of slices in the energy interval [OmegaMin, OmegaMax]. used if SlabSS_calc= T. The default value is 100.
 
+**Lindhard_omega_min, Lindhard_omega_max** : real-valued, frequency window for the Lindhard susceptibility evaluation when ``Lindhard_calc = T``. They inherit the values of ``OmegaMin`` and ``OmegaMax`` if not provided explicitly.
+
+**Lindhard_omega_num** : integer valued, number of frequency samples for the Lindhard calculation. Defaults to ``OmegaNum`` and should be no smaller than 2.
+
+**Lindhard_broadening** : real-valued, phenomenological broadening (imaginary part of the frequency) used when accumulating ``chi(q,\omega)``. The default equals ``Fermi_broadening``.
+
 **Nk1, Nk2, Nk3** : integer valued, Number of k points for different purpose. I will explain that later. Default value is Nk1=20, Nk2=20, Nk3=20.
 
-**NP** : integer valued, Number of principle layers, see details related to iterative green’s function. Used if  SlabSS_calc= T, SlabArc_calc=T, SlabSpintexture_calc=T. Default value is 2. You need to do a convergence test by setting Np= 1, Np=2, Np=3, and check the surface state spectrum. Basically, the value of Np depends on the spread of Wannier functions you constructed. One thing should be mentioned is that the computational time grows cubically of Np. 
+**Lindhard_Nk1, Lindhard_Nk2, Lindhard_Nk3** : integer valued, sizes of the Brillouin-zone k mesh used in the Lindhard routine. By default they follow ``Nk1``, ``Nk2`` and ``Nk3``.
+
+**Lindhard_Nq1, Lindhard_Nq2, Lindhard_Nq3** : integer valued, q-grid dimensions for the susceptibility. They default to the corresponding Lindhard k-mesh sizes.
+
+**Lindhard_q_start** : real-valued vector, fractional starting point of the q-grid. The default is the origin of the Brillouin zone.
+
+**Lindhard_output** : character string, filename for the susceptibility table written by the Lindhard calculation. The default is ``lindhard.dat``.
+
+**NP** : integer valued, Number of principle layers, see details related to iterative green’s function. Used if  SlabSS_calc= T, SlabArc_calc=T, SlabSpintexture_calc=T. Default value is 2. You need to do a convergence test by setting Np= 1, Np=2, Np=3, and check the surface state spectrum. Basically, the value of Np depends on the spread of Wannier functions you constructed. One thing should be mentioned is that the computational time grows cubically of Np.
 
 **Gap_threshold** :  real valued. This value is used when you do energy gap calculation like BulkGap_cube_calc=T, BulkGap_plane_calc=T. The k points will be printed out in a file when the energy gap is smaller than Gap_threshold. 
 

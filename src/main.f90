@@ -36,6 +36,7 @@
 
      use wmpi
      use para
+     use lindhard_module, only: compute_lindhard
      implicit none
 
      !> file existence
@@ -405,6 +406,16 @@
            call print_time_cost(time_start, time_end, 'JDos_calc')
            if(cpuid.eq.0)write(stdout, *)'<< End of calculating the JDOS for bulk system'
         endif
+     endif
+
+     if (Lindhard_calc) then
+        if(cpuid.eq.0)write(stdout, *)' '
+        if(cpuid.eq.0)write(stdout, *)'>> Start of computing the Lindhard susceptibility'
+        call now(time_start)
+        call compute_lindhard()
+        call now(time_end)
+        call print_time_cost(time_start, time_end, 'Lindhard_calc')
+        if(cpuid.eq.0)write(stdout, *)'<< End of computing the Lindhard susceptibility'
      endif
 
      !> effective mass

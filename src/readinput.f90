@@ -129,6 +129,7 @@ subroutine readinput
    BerryCurvature_kpath_Occupied_calc = .FALSE.
    MirrorChern_calc      = .FALSE.
    Dos_calc              = .FALSE.
+   Lindhard_calc         = .FALSE.
    Dos_slab_calc              = .FALSE.
    JDos_calc             = .FALSE.
    EffectiveMass_calc    = .FALSE.
@@ -193,6 +194,7 @@ subroutine readinput
       write(*, *)"BerryCurvature_kpath_sepband_calc"
       write(*, *)"BerryCurvature_slab_calc, BerryCurvature_Cube_calc"
       write(*, *)"Dos_calc, JDos_calc, FindNodes_calc"
+      write(*, *)"Lindhard_calc"
       write(*, *)"BulkFS_plane_calc"
       write(*, *)"BulkFS_plane_stack_calc"
       write(*, *)"Z2_3D_calc"
@@ -275,6 +277,7 @@ subroutine readinput
       write(stdout, *) "BerryCurvature_Cube_calc          : ", BerryCurvature_Cube_calc
       write(stdout, *) "BerryCurvature_slab_calc          : ", BerryCurvature_slab_calc
       write(stdout, *) "Dos_calc                          : ",  DOS_calc
+      write(stdout, *) "Lindhard_calc                     : ",  Lindhard_calc
       write(stdout, *) "Z2_3D_calc                        : ",  Z2_3D_calc
       write(stdout, *) "WeylChirality_calc                : ",  WeylChirality_calc
       write(stdout, *) "NLChirality_calc                  : ",  NLChirality_calc
@@ -593,9 +596,21 @@ subroutine readinput
    OmegaNum_unfold = 0
    OmegaMin = -1d0
    OmegaMax =  1d0
+   Lindhard_omega_min = OmegaMin
+   Lindhard_omega_max = OmegaMax
+   Lindhard_omega_num = OmegaNum
+   Lindhard_broadening = Fermi_broadening
    Nk1 = 10
    Nk2 = 10
-   Nk3 = 1 
+   Nk3 = 1
+   Lindhard_Nk1 = Nk1
+   Lindhard_Nk2 = Nk2
+   Lindhard_Nk3 = Nk3
+   Lindhard_Nq1 = Nk1
+   Lindhard_Nq2 = Nk2
+   Lindhard_Nq3 = Nk3
+   Lindhard_q_start = (/0d0, 0d0, 0d0/)
+   Lindhard_output = 'lindhard.dat'
    NP  = 2
    Gap_threshold= 0.01d0
    Tmin = 100.  ! in Kelvin
@@ -650,6 +665,16 @@ subroutine readinput
       if (OmegaNum_unfold==0) OmegaNum_unfold= 200
    endif
 
+   if (Lindhard_Nk1<1) Lindhard_Nk1 = Nk1
+   if (Lindhard_Nk2<1) Lindhard_Nk2 = Nk2
+   if (Lindhard_Nk3<1) Lindhard_Nk3 = Nk3
+   if (Lindhard_Nq1<1) Lindhard_Nq1 = Lindhard_Nk1
+   if (Lindhard_Nq2<1) Lindhard_Nq2 = Lindhard_Nk2
+   if (Lindhard_Nq3<1) Lindhard_Nq3 = Lindhard_Nk3
+   if (Lindhard_omega_num<2) Lindhard_omega_num = max(2, OmegaNum)
+   if (Lindhard_broadening<=0d0) Lindhard_broadening = Fermi_broadening
+   if (len_trim(Lindhard_output)==0) Lindhard_output = 'lindhard.dat'
+
 
    if (stat>0) then
 
@@ -680,9 +705,21 @@ subroutine readinput
       write(stdout, '(1x, a, f16.5, a)')'OmegaMax : ', OmegaMax, ' eV'
       write(stdout, '(1x, a, i6   )')'OmegaNum : ', OmegaNum
       write(stdout, '(1x, a, i6   )')'OmegaNum_unfold : ', OmegaNum_unfold
+      write(stdout, '(1x, a, f16.5, a)')'Lindhard_omega_min : ', Lindhard_omega_min, ' eV'
+      write(stdout, '(1x, a, f16.5, a)')'Lindhard_omega_max : ', Lindhard_omega_max, ' eV'
+      write(stdout, '(1x, a, i6   )')'Lindhard_omega_num : ', Lindhard_omega_num
+      write(stdout, '(1x, a, f16.5, a)')'Lindhard_broadening : ', Lindhard_broadening, ' eV'
       write(stdout, '(1x, a, i6   )')'Nk1 : ', Nk1
       write(stdout, '(1x, a, i6   )')'Nk2 : ', Nk2
       write(stdout, '(1x, a, i6   )')'Nk3 : ', Nk3
+      write(stdout, '(1x, a, i6   )')'Lindhard_Nk1 : ', Lindhard_Nk1
+      write(stdout, '(1x, a, i6   )')'Lindhard_Nk2 : ', Lindhard_Nk2
+      write(stdout, '(1x, a, i6   )')'Lindhard_Nk3 : ', Lindhard_Nk3
+      write(stdout, '(1x, a, i6   )')'Lindhard_Nq1 : ', Lindhard_Nq1
+      write(stdout, '(1x, a, i6   )')'Lindhard_Nq2 : ', Lindhard_Nq2
+      write(stdout, '(1x, a, i6   )')'Lindhard_Nq3 : ', Lindhard_Nq3
+      write(stdout, '(1x, a, 3f16.5)')'Lindhard_q_start : ', Lindhard_q_start
+      write(stdout, '(1x, a, a    )')'Lindhard_output : ', trim(Lindhard_output)
       write(stdout, '(1x, a, i6   )')'NP number of principle layers  : ', Np
       write(stdout, '(1x, a, f16.5)')'Tmin(Kelvin)  : ', Tmin
       write(stdout, '(1x, a, f16.5)')'Tmax(Kelvin)  : ', Tmax
@@ -722,6 +759,9 @@ subroutine readinput
    Fermi_broadening = Fermi_broadening*eV2Hartree
    OmegaMin= OmegaMin*eV2Hartree
    OmegaMax= OmegaMax*eV2Hartree
+   Lindhard_omega_min = Lindhard_omega_min*eV2Hartree
+   Lindhard_omega_max = Lindhard_omega_max*eV2Hartree
+   Lindhard_broadening = Lindhard_broadening*eV2Hartree
    Gap_threshold= Gap_threshold*eV2Hartree
    Rcut= Rcut*Ang2Bohr
    penetration_lambda_arpes= penetration_lambda_arpes*Ang2Bohr
