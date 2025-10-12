@@ -27,10 +27,6 @@ OFLAG = # -O3 -static-intel
 FFLAG = $(OFLAG) $(WFLAG)
 LFLAG = $(OFLAG)
 
-# ARPACK LIBRARY
-#ARPACK=/Users/user/quan/work/workplace/ARPACK/libarpack_MAC.a
-ARPACK=/Users/user/quan/work/workplace/ARPACK/libarpack_MAC_gfortran.a
-
 # blas and lapack libraries
 # static linking
 #LIBS = -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a \
@@ -39,8 +35,8 @@ ARPACK=/Users/user/quan/work/workplace/ARPACK/libarpack_MAC_gfortran.a
 		  ${ARPACK}
 
 # dynamic linking
-#LIBS = ${ARPACK} -L/${MKLROOT}/lib/intel64 -lmkl_core -lmkl_sequential -lmkl_intel_lp64 -lpthread 
-LIBS = ${ARPACK} -llapack  -lblas
+#LIBS = -L/${MKLROOT}/lib/intel64 -lmkl_core -lmkl_sequential -lmkl_intel_lp64 -lpthread 
+LIBS = -llapack -lblas
  
 main : $(OBJ)
 	$(F90) $(LFLAG) $(OBJ) -o wt.x $(LIBS)

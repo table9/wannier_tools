@@ -1,0 +1,45 @@
+&TB_FILE
+ Hrfile = 'wannier90_hr.dat'
+/
+&CONTROL
+ Lindhard_calc = T
+/
+&SYSTEM
+ SOC = 0
+ E_FERMI = 0.0
+ NumOccupied = 1
+/
+&PARAMETERS
+ Nk1 = 41
+ Nk2 = 41
+ Nk3 = 1
+ Lindhard_Nk1 = 41
+ Lindhard_Nk2 = 41
+ Lindhard_Nk3 = 1
+ Lindhard_qmesh = 41 41 1
+ Lindhard_omega_min = 0.0
+ Lindhard_omega_max = 0.8
+ Lindhard_omega_num = 161
+ Lindhard_broadening = 0.010
+ Lindhard_T = 0.001
+ Lindhard_T_unit = 'eV'
+ Lindhard_matrix = 'FULL'
+ Lindhard_mode = 'DYNAMIC'
+ Lindhard_output = 'chi0_2d_dynamic.dat'
+/
+LATTICE
+ Angstrom
+ 1.000000 0.000000 0.000000
+ 0.000000 1.000000 0.000000
+ 0.000000 0.000000 1.000000
+ATOM_POSITIONS
+ 1
+ Direct
+ X 0.0 0.0 0.0
+PROJECTORS
+ 1
+ X s
+SURFACE
+ 1 0 0
+ 0 1 0
+ 0 0 1

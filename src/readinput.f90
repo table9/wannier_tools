@@ -611,6 +611,15 @@ subroutine readinput
    Lindhard_Nq3 = Nk3
    Lindhard_q_start = (/0d0, 0d0, 0d0/)
    Lindhard_output = 'lindhard.dat'
+   Lindhard_out = ''
+   Lindhard_mode = 'DYNAMIC'
+   Lindhard_matrix = 'DIAG'
+   Lindhard_T_unit = 'K'
+   Lindhard_T = -1d0
+   Lindhard_eta_input = -1d0
+   Lindhard_qmesh = (/0, 0, 0/)
+   Lindhard_omega_triplet = (/0d0, 0d0, -1d0/)
+   Lindhard_mu_input = huge(1.0_dp)
    NP  = 2
    Gap_threshold= 0.01d0
    Tmin = 100.  ! in Kelvin
@@ -671,9 +680,22 @@ subroutine readinput
    if (Lindhard_Nq1<1) Lindhard_Nq1 = Lindhard_Nk1
    if (Lindhard_Nq2<1) Lindhard_Nq2 = Lindhard_Nk2
    if (Lindhard_Nq3<1) Lindhard_Nq3 = Lindhard_Nk3
+   if (all(Lindhard_qmesh>0)) then
+      Lindhard_Nq1 = Lindhard_qmesh(1)
+      Lindhard_Nq2 = Lindhard_qmesh(2)
+      Lindhard_Nq3 = Lindhard_qmesh(3)
+   endif
    if (Lindhard_omega_num<2) Lindhard_omega_num = max(2, OmegaNum)
    if (Lindhard_broadening<=0d0) Lindhard_broadening = Fermi_broadening
+   if (Lindhard_eta_input>0d0) Lindhard_broadening = Lindhard_eta_input
    if (len_trim(Lindhard_output)==0) Lindhard_output = 'lindhard.dat'
+   if (len_trim(Lindhard_out)>0) Lindhard_output = Lindhard_out
+   if (Lindhard_omega_triplet(3)>1d-8) then
+      Lindhard_omega_min = Lindhard_omega_triplet(1)
+      Lindhard_omega_max = Lindhard_omega_triplet(2)
+      Lindhard_omega_num = max(2, nint(Lindhard_omega_triplet(3)))
+   endif
+   if (Lindhard_mu_input<0.5d0*huge(1.0_dp)) iso_energy = Lindhard_mu_input
 
 
    if (stat>0) then
@@ -692,7 +714,51 @@ subroutine readinput
 
    NBTau= max(NBTau, BTauNum)
   
-   projection_weight_mode= upper(projection_weight_mode)
+  Lindhard_mode = upper(adjustl(Lindhard_mode))
+  if (len_trim(Lindhard_mode)==0) Lindhard_mode = 'DYNAMIC'
+  select case (trim(Lindhard_mode))
+  case ('STATIC','DYNAMIC')
+     continue
+  case default
+     if (cpuid==0) write(stdout, '(1x, a, a)')'WARNING: Lindhard_mode not recognised, fallback to DYNAMIC: ', trim(Lindhard_mode)
+     Lindhard_mode = 'DYNAMIC'
+  end select
+
+  Lindhard_matrix = upper(adjustl(Lindhard_matrix))
+  if (len_trim(Lindhard_matrix)==0) Lindhard_matrix = 'DIAG'
+  select case (trim(Lindhard_matrix))
+  case ('CMA','DIAG','FULL')
+     continue
+  case default
+     if (cpuid==0) write(stdout, '(1x, a, a)')'WARNING: Lindhard_matrix not recognised, fallback to DIAG: ', trim(Lindhard_matrix)
+     Lindhard_matrix = 'DIAG'
+  end select
+
+  Lindhard_T_unit = upper(adjustl(Lindhard_T_unit))
+  if (len_trim(Lindhard_T_unit)==0) Lindhard_T_unit = 'K'
+  if (Lindhard_calc .and. Lindhard_T>0d0) then
+     temp = Lindhard_T
+     select case (trim(Lindhard_T_unit))
+     case ('K','KELVIN')
+        if (temp<=0d0) then
+           if (cpuid==0) write(stdout, '(1x, a)')'WARNING: Lindhard_T must be positive; keeping existing Beta.'
+        else
+           Beta = 11600d0/temp
+        endif
+     case ('EV')
+        if (temp<=0d0) then
+           if (cpuid==0) write(stdout, '(1x, a)')'WARNING: Lindhard_T must be positive; keeping existing Beta.'
+        else
+           Beta = 1d0/temp
+        endif
+     case default
+        if (cpuid==0) write(stdout, '(1x, a, a)')'WARNING: Lindhard_T_unit not recognised, assume Kelvin: ', trim(Lindhard_T_unit)
+        if (temp>0d0) Beta = 11600d0/temp
+     end select
+     if (Beta>0d0) Beta = Beta/eV2Hartree
+  endif
+
+  projection_weight_mode= upper(projection_weight_mode)
    if (cpuid==0) then
       write(stdout, *) "  "
       write(stdout, *) ">>>calculation parameters : "
@@ -720,6 +786,11 @@ subroutine readinput
       write(stdout, '(1x, a, i6   )')'Lindhard_Nq3 : ', Lindhard_Nq3
       write(stdout, '(1x, a, 3f16.5)')'Lindhard_q_start : ', Lindhard_q_start
       write(stdout, '(1x, a, a    )')'Lindhard_output : ', trim(Lindhard_output)
+      write(stdout, '(1x, a, a    )')'Lindhard_mode : ', trim(Lindhard_mode)
+      write(stdout, '(1x, a, a    )')'Lindhard_matrix : ', trim(Lindhard_matrix)
+      if (Lindhard_T>0d0) then
+         write(stdout, '(1x, a, f16.5, 1x, a)')'Lindhard_T : ', Lindhard_T, trim(Lindhard_T_unit)
+      endif
       write(stdout, '(1x, a, i6   )')'NP number of principle layers  : ', Np
       write(stdout, '(1x, a, f16.5)')'Tmin(Kelvin)  : ', Tmin
       write(stdout, '(1x, a, f16.5)')'Tmax(Kelvin)  : ', Tmax
@@ -5126,6 +5197,3 @@ subroutine eliminate_duplicates_with_tol(ndim1, ndim2, array2, Nleft, tol)
 
    return
 end subroutine eliminate_duplicates_with_tol
-
-
-

@@ -366,6 +366,10 @@
      character(80) :: Package            ! VASP, QE
      character(80) :: KPorTB             ! KP or TB
      character(256) :: Lindhard_output   ! Output filename for Lindhard susceptibility
+     character(256) :: Lindhard_out      ! Optional alias for Lindhard output file
+     character(16)  :: Lindhard_mode     ! static | dynamic
+     character(16)  :: Lindhard_matrix   ! CMA | diag | full
+     character(16)  :: Lindhard_T_unit   ! K | eV
      logical       :: Orthogonal_Basis   ! True or False for Orthogonal basis or non-orthogonal basis
      logical :: Is_Sparse_Hr, Is_Sparse, Is_Hrfile
      namelist / TB_FILE / Hrfile, Particle, Package, KPorTB, Is_Hrfile, &
@@ -531,6 +535,7 @@
      integer :: Lindhard_Nq1  ! number of q points for Lindhard calculation
      integer :: Lindhard_Nq2  ! number of q points for Lindhard calculation
      integer :: Lindhard_Nq3  ! number of q points for Lindhard calculation
+     integer :: Lindhard_qmesh(3) ! optional input mesh for q-grid
      integer, parameter :: Nk2_max= 4096   ! maximum number of k points 
 
      integer, public, save :: Nr1=5
@@ -564,6 +569,11 @@
      real(dp) :: OmegaMin, OmegaMax ! omega interval
      real(dp) :: Lindhard_omega_min, Lindhard_omega_max
      real(dp) :: Lindhard_broadening
+     real(dp) :: Lindhard_T
+     real(dp) :: Lindhard_eta_input
+     real(dp) :: Lindhard_mu_input
+     real(dp) :: Lindhard_omega_triplet(3)
+     real(dp) :: Lindhard_q_start(3)
   
      real(Dp) :: E_arc ! Fermi energy for arc calculation
      real(Dp) :: iso_energy ! an iso energy for some properties at a fixed energy. replace iso_energy with iso_energy from version 2.7.2
@@ -644,7 +654,9 @@
      namelist /PARAMETERS/ E_arc, Fermi_broadening, EF_integral_range, OmegaNum, OmegaNum_unfold, OmegaMin, OmegaMax, &
         Lindhard_omega_num, Lindhard_omega_min, Lindhard_omega_max, Lindhard_broadening, &
         Eta_Arc, iso_energy, Nk1, Nk2, Nk3, Lindhard_Nk1, Lindhard_Nk2, Lindhard_Nk3, &
-        Lindhard_Nq1, Lindhard_Nq2, Lindhard_Nq3, Lindhard_q_start, Lindhard_output, NP, Gap_threshold, Tmin, Tmax, NumT, &
+        Lindhard_Nq1, Lindhard_Nq2, Lindhard_Nq3, Lindhard_qmesh, Lindhard_q_start, Lindhard_output, Lindhard_out, &
+        Lindhard_mode, Lindhard_matrix, Lindhard_T_unit, Lindhard_T, Lindhard_eta_input, Lindhard_omega_triplet, Lindhard_mu_input, &
+        NP, Gap_threshold, Tmin, Tmax, NumT, &
         NBTau, BTauNum, BTauMax, Rcut, Magp, Magq, Magp_min, Magp_max, Nslice_BTau_Max, &
         wcc_neighbour_tol, wcc_calc_tol, Beta, NumLCZVecs, iprint_level, &
         Relaxation_Time_Tau, symprec, arpack_solver, RKF45_PERIODIC_LEVEL, &
@@ -940,7 +952,6 @@
      real(dp) :: K3D_vec1_cube(3) ! the 1st k vector for the k cube
      real(dp) :: K3D_vec2_cube(3) ! the 2nd k vector for the k cube
      real(dp) :: K3D_vec3_cube(3) ! the 3rd k vector for the k cube
-     real(dp) :: Lindhard_q_start(3) ! starting q-vector for Lindhard calculation
 
      integer, allocatable     :: irvec(:,:)   ! R coordinates in fractional units
      integer, allocatable     :: irvec_valley(:,:)   ! R coordinates in fractional units
