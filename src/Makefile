@@ -10,8 +10,9 @@ OBJ =  module.o sparse.o wt_aux.o math_lib.o symmetry.o \
 		 berry.o wanniercenter_adaptive.o \
   		 effective_mass.o findnodes.o \
 		 sigma_OHE.o sigma.o Boltz_transport_anomalous.o \
-		 2D_TSC.o optic.o orbital_hall.o\
-		main.o
+                 2D_TSC.o optic.o orbital_hall.o\
+                 lindhard.o \
+                 main.o
 
 # compiler
 #F90  = mpif90 -fpp -DMPI -fpe3 -O3 -DARPACK -DINTELMKL #-check all -traceback -g
@@ -26,10 +27,6 @@ OFLAG = # -O3 -static-intel
 FFLAG = $(OFLAG) $(WFLAG)
 LFLAG = $(OFLAG)
 
-# ARPACK LIBRARY
-#ARPACK=/Users/user/quan/work/workplace/ARPACK/libarpack_MAC.a
-ARPACK=/Users/user/quan/work/workplace/ARPACK/libarpack_MAC_gfortran.a
-
 # blas and lapack libraries
 # static linking
 #LIBS = -Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a \
@@ -38,8 +35,8 @@ ARPACK=/Users/user/quan/work/workplace/ARPACK/libarpack_MAC_gfortran.a
 		  ${ARPACK}
 
 # dynamic linking
-#LIBS = ${ARPACK} -L/${MKLROOT}/lib/intel64 -lmkl_core -lmkl_sequential -lmkl_intel_lp64 -lpthread 
-LIBS = ${ARPACK} -llapack  -lblas
+#LIBS = -L/${MKLROOT}/lib/intel64 -lmkl_core -lmkl_sequential -lmkl_intel_lp64 -lpthread 
+LIBS = -llapack -lblas
  
 main : $(OBJ)
 	$(F90) $(LFLAG) $(OBJ) -o wt.x $(LIBS)
